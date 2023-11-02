@@ -7,46 +7,49 @@
 
 import SwiftUI
 
-struct Flower: Shape {
-    var petalOffSet = -20.0 // distancia da pétala em relação ao centro
-    var petalWidth = 100.0 // largura da pétala
+struct ColorCyclingCircle: View {
+    var amount = 0.0
+    var steps = 100
     
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        
-        for number in stride(from: 0, to: Double.pi * 2, by: Double.pi / 8) {  // Conte um oitavo de pi até 360 graus
-            let rotation = CGAffineTransform(rotationAngle: number)
-            let position = rotation.concatenating(CGAffineTransform(translationX: rect.width / 2, y: rect.height / 2))
-            
-            let originalPetal = Path(ellipseIn: CGRect(x: petalOffSet, y: 0, width: petalWidth, height: rect.width / 2))
-            let rotatedPetal = originalPetal.applying(position)
-            
-            path.addPath(rotatedPetal)
+    var body: some View {
+        ZStack {
+            ForEach (0..<steps) { value in
+                Circle()
+                    .inset(by: Double(value))
+                    .strokeBorder(
+                        LinearGradient(gradient: Gradient(colors: [
+                            color(for: value, brigthtness: 1),
+                            color(for: value, brigthtness: 0.5)
+                        ]), startPoint: .top, endPoint: UnitPoint.bottom),
+                        lineWidth: 2
+                        )
+            }
         }
-        return path
+        .drawingGroup()
     }
     
+    func color( for value: Int, brigthtness: Double) -> Color {
+        var targetHue = Double(value) / Double(steps) + amount
+        
+        if targetHue > 1 {
+            targetHue -= 1
+        }
+        
+        return Color(hue: targetHue, saturation: 1, brightness: brigthtness)
+    }
 }
 
 struct ContentView: View {
-    @State private var petalOffSet = -20.0
-    @State private var petalWidth = 100.0
+    @State private var colorCycle = 0.0
     var body: some View {
-        VStack {
-            Flower(petalOffSet: petalOffSet, petalWidth: petalWidth)
-                .fill(.blue, style: FillStyle(eoFill: true))
+        VStack{
+            ColorCyclingCircle(amount: colorCycle)
+                .frame(width: 300, height: 300)
             
-        Text("Petal OffSet")
-            Slider(value: $petalOffSet, in: -40...40)
-                .padding([.horizontal,.bottom])
-        
-        Text("Petal Width")
-            Slider(value: $petalWidth, in: 0...100)
-                .padding(.horizontal)
-            
-            
+            Slider(value: $colorCycle)
+                .padding(80)
         }
-        
+    
     }
 }
 
