@@ -7,35 +7,44 @@
 
 import SwiftUI
 
-struct Arc: Shape {
-    let startAngle: Angle
-    let endAngle: Angle
-    let clockwise: Bool
+struct Flower: Shape {
+    var petalOffSet = -20.0 // distancia da pétala em relação ao centro
+    var petalWidth = 100.0 // largura da pétala
     
     func path(in rect: CGRect) -> Path {
-        let rotationAjustment = Angle.degrees(90)
-        let modifiedStart = startAngle - rotationAjustment
-        let modifiedEnd = endAngle - rotationAjustment
-        
         var path = Path()
         
-        path.addArc(center: CGPoint(x: rect.midX, y: rect.midY), radius: rect.width / 2 , startAngle: modifiedStart, endAngle: modifiedEnd, clockwise: !clockwise)
-        
+        for number in stride(from: 0, to: Double.pi * 2, by: Double.pi / 8) {  // Conte um oitavo de pi até 360 graus
+            let rotation = CGAffineTransform(rotationAngle: number)
+            let position = rotation.concatenating(CGAffineTransform(translationX: rect.width / 2, y: rect.height / 2))
+            
+            let originalPetal = Path(ellipseIn: CGRect(x: petalOffSet, y: 0, width: petalWidth, height: rect.width / 2))
+            let rotatedPetal = originalPetal.applying(position)
+            
+            path.addPath(rotatedPetal)
+        }
         return path
     }
+    
 }
 
 struct ContentView: View {
-    @State private var angle: Double = 0
+    @State private var petalOffSet = -20.0
+    @State private var petalWidth = 100.0
     var body: some View {
         VStack {
-            Arc(startAngle: .degrees(0), endAngle: .degrees(angle), clockwise: true)
-                .stroke(.red, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-            .frame(width: 300, height: 300)
+            Flower(petalOffSet: petalOffSet, petalWidth: petalWidth)
+                .fill(.blue, style: FillStyle(eoFill: true))
             
-            Slider(value: $angle, in: 0...360)
-                .accentColor(.red)
-                .padding(80)
+        Text("Petal OffSet")
+            Slider(value: $petalOffSet, in: -40...40)
+                .padding([.horizontal,.bottom])
+        
+        Text("Petal Width")
+            Slider(value: $petalWidth, in: 0...100)
+                .padding(.horizontal)
+            
+            
         }
         
     }
